@@ -51,7 +51,7 @@ class Home extends CI_Controller {
         $this->load->library('form_validation');
         
         $this->form_validation->set_error_delimiters('', '');
-        
+      
         $this->form_validation->set_rules('email', 'E-mail', ['required', 'trim', 'valid_email']);
         $this->form_validation->set_rules('password', 'Password', ['required']);
         
@@ -76,13 +76,13 @@ class Home extends CI_Controller {
                 if($admin_info){
                     foreach($admin_info as $get){
                         $admin_id = $get->id;
-                        
+                  
                         $_SESSION['admin_id'] = $admin_id;
                         $_SESSION['admin_email'] = $givenEmail;
                         $_SESSION['admin_role'] = $get->role;
                         $_SESSION['admin_initial'] = strtoupper(substr($get->first_name, 0, 1));
                         $_SESSION['admin_name'] = $get->first_name . " " . $get->last_name;
-                        $_SESSION['admin_name'] = $get->store_id;
+                        $_SESSION['store_id'] = $get->store_id;
                     }
                     
                     //update user's last log in time

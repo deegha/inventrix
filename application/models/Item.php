@@ -21,7 +21,7 @@ class Item extends CI_Model{
     public function getAll($orderBy, $orderFormat, $start=0, $limit=''){
         $this->db->limit($limit, $start);
         $this->db->order_by($orderBy, $orderFormat);
-        
+        $this->db->where('store_id =', $_SESSION['store_id']);
         $run_q = $this->db->get('items');
         
         if($run_q->num_rows() > 0){
@@ -52,7 +52,12 @@ class Item extends CI_Model{
      * @return boolean
      */
     public function add($itemName, $itemQuantity, $itemPrice, $itemDescription, $itemCode){
-        $data = ['name'=>$itemName, 'quantity'=>$itemQuantity, 'unitPrice'=>$itemPrice, 'description'=>$itemDescription, 'code'=>$itemCode];
+        $data = ['name'=>$itemName, 
+                'quantity'=>$itemQuantity, 
+                'unitPrice'=>$itemPrice, 
+                'description'=>$itemDescription, 
+                'code'=>$itemCode,
+                'store_id' => $_SESSION['store_id']];
                 
         //set the datetime based on the db driver in use
         $this->db->platform() == "sqlite3" 
@@ -88,6 +93,8 @@ class Item extends CI_Model{
     public function itemsearch($value){
         $q = "SELECT * FROM items 
             WHERE 
+            store_id = ".$_SESSION['store_id']."
+            AND
             name LIKE '%".$this->db->escape_like_str($value)."%'
             || 
             code LIKE '%".$this->db->escape_like_str($value)."%'";
@@ -119,7 +126,7 @@ class Item extends CI_Model{
      * @return boolean
      */
     public function incrementItem($itemId, $numberToadd){
-        $q = "UPDATE items SET quantity = quantity + ? WHERE id = ?";
+        $q = "UPDATE items SET quantity = quantity + ? WHERE id = ? AND store_id = ".$_SESSION['store_id'];
         
         $this->db->query($q, [$numberToadd, $itemId]);
         
@@ -141,7 +148,7 @@ class Item extends CI_Model{
     */
     
     public function decrementItem($itemCode, $numberToRemove){
-        $q = "UPDATE items SET quantity = quantity - ? WHERE code = ?";
+        $q = "UPDATE items SET quantity = quantity - ? WHERE code = ? AND store_id = ".$_SESSION['store_id'];
         
         $this->db->query($q, [$numberToRemove, $itemCode]);
         
@@ -165,7 +172,7 @@ class Item extends CI_Model{
     
     
    public function newstock($itemId, $qty){
-       $q = "UPDATE items SET quantity = quantity + $qty WHERE id = ?";
+       $q = "UPDATE items SET quantity = quantity + $qty WHERE id = ? AND store_id =".$_SESSION['store_id'];
        
        $this->db->query($q, [$itemId]);
        
@@ -188,7 +195,7 @@ class Item extends CI_Model{
     */
    
    public function deficit($itemId, $qty){
-       $q = "UPDATE items SET quantity = quantity - $qty WHERE id = ?";
+       $q = "UPDATE items SET quantity = quantity - $qty WHERE id = ? AND store_id = ".$_SESSION['store_id'];
        
        $this->db->query($q, [$itemId]);
        
@@ -220,6 +227,7 @@ class Item extends CI_Model{
        $data = ['name'=>$itemName, 'unitPrice'=>$itemPrice, 'description'=>$itemDesc];
        
        $this->db->where('id', $itemId);
+       $this->db->where('store_id', $_SESSION['id']);
        $this->db->update('items', $data);
        
        return TRUE;
@@ -236,7 +244,8 @@ class Item extends CI_Model{
 	public function getActiveItems($orderBy, $orderFormat){
         $this->db->order_by($orderBy, $orderFormat);
 		
-		$this->db->where('quantity >=', 1);
+        $this->db->where('quantity >=', 1);
+        $this->db->where('store_id =', $_SESSION['store_id']);
         
         $run_q = $this->db->get('items');
         

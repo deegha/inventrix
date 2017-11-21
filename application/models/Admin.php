@@ -33,7 +33,7 @@ class Admin extends CI_Model{
      */
     public function add($f_name, $l_name, $email, $password, $role, $mobile1, $mobile2){
         $data = ['first_name'=>$f_name, 'last_name'=>$l_name, 'email'=>$email, 'password'=>$password, 'role'=>$role,
-            'mobile1'=>$mobile1, 'mobile2'=>$mobile2];
+            'mobile1'=>$mobile1, 'mobile2'=>$mobile2, 'store_id'=> $_SESSION['store_id']];
         
         //set the datetime based on the db driver in use
         $this->db->platform() == "sqlite3" 
@@ -101,8 +101,8 @@ class Admin extends CI_Model{
      * @param type $email
      * @return boolean
      */
-    public function get_admin_info($email){
-        $this->db->select('id, first_name, last_name, role');
+    public function get_admin_info($email){ 
+        $this->db->select('id, first_name, last_name, role, store_id');
         $this->db->where('email', $email);
 
         $run_q = $this->db->get('admin');
@@ -138,7 +138,7 @@ class Admin extends CI_Model{
     public function getAll($orderBy = "first_name", $orderFormat = "ASC", $start = 0, $limit = ""){
         $this->db->select('id, first_name, last_name, email, role, mobile1, mobile2, created_on, last_login, account_status, deleted');
         $this->db->where("id != ", $_SESSION['admin_id']);
-        $this->db->where("email != ", "demo@1410inc.xyz");//added to prevent people from removing the demo admin account
+        $this->db->where("store_id = ", $_SESSION['store_id']);
         $this->db->limit($limit, $start);
         $this->db->order_by($orderBy, $orderFormat);
         
@@ -170,6 +170,7 @@ class Admin extends CI_Model{
     */ 
     public function suspend($admin_id, $new_status){       
         $this->db->where('id', $admin_id);
+        $this->db->where('store_id', $_SESSION['store_id']);
         $this->db->update('admin', ['account_status'=>$new_status]);
 
         if($this->db->affected_rows()){
@@ -227,6 +228,7 @@ class Admin extends CI_Model{
     public function adminSearch($value){
         $q = "SELECT * FROM admin WHERE 
                 id != {$_SESSION['admin_id']}
+                AND store_id = {$_SESSION['store_id']} 
                     AND
                 (
                 MATCH(first_name) AGAINST(?)
@@ -266,6 +268,7 @@ class Admin extends CI_Model{
             'role'=>$role];
         
         $this->db->where('id', $admin_id);
+        $this->db->where('store_id', $_SESSION['store_id']);
         
         $this->db->update('admin', $data);
         

@@ -50,7 +50,7 @@ class Transactions extends CI_Controller{
         //set the sort order
         $orderBy = $this->input->get('orderBy', TRUE) ? $this->input->get('orderBy', TRUE) : "transId";
         $orderFormat = $this->input->get('orderFormat', TRUE) ? $this->input->get('orderFormat', TRUE) : "DESC";
-        
+     
         //count the total number of transaction group (grouping by the ref) in db
         $totalTransactions = $this->transaction->totalTransactions();
         

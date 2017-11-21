@@ -30,7 +30,7 @@ class Transaction extends CI_Model {
      * @param type $limit
      * @return boolean
      */
-    public function getAll($orderBy, $orderFormat, $start, $limit) {
+    public function getAll($orderBy, $orderFormat, $start, $limit) { 
         if ($this->db->platform() == "sqlite3") {
             $q = "SELECT transactions.ref, transactions.totalMoneySpent, transactions.modeOfPayment, transactions.staffId,
                 transactions.transDate, transactions.lastUpdated, transactions.amountTendered, transactions.changeDue,
@@ -38,6 +38,7 @@ class Transaction extends CI_Model {
                 transactions.cust_name, transactions.cust_phone, transactions.cust_email
                 FROM transactions
                 LEFT OUTER JOIN admin ON transactions.staffId = admin.id
+                WHERE store_id = ".$_SESSION['store_id']."
                 GROUP BY ref
                 ORDER BY {$orderBy} {$orderFormat}
                 LIMIT {$limit} OFFSET {$start}";
@@ -54,6 +55,7 @@ class Transaction extends CI_Model {
             
             $this->db->join('admin', 'transactions.staffId = admin.id', 'LEFT');
             $this->db->limit($limit, $start);
+            $this->db->where('transactions.store_id = ',$_SESSION['store_id']);
             $this->db->group_by('ref');
             $this->db->order_by($orderBy, $orderFormat);
 
@@ -104,7 +106,7 @@ class Transaction extends CI_Model {
             'amountTendered' => $_at, 'changeDue' => $_cd, 'modeOfPayment' => $_mop, 'transType' => $_tt,
             'staffId' => $this->session->admin_id, 'totalMoneySpent' => $_tas, 'ref' => $ref, 'vatAmount' => $_va,
             'vatPercentage' => $_vp, 'discount_amount'=>$da, 'discount_percentage'=>$dp, 'cust_name'=>$cn, 'cust_phone'=>$cp,
-            'cust_email'=>$ce];
+            'cust_email'=>$ce, 'store_id' => $_SESSION['store_id']];
 
         //set the datetime based on the db driver in use
         $this->db->platform() == "sqlite3" ?
@@ -135,7 +137,7 @@ class Transaction extends CI_Model {
      * @return boolean
      */
     public function isRefExist($ref) {
-        $q = "SELECT DISTINCT ref FROM transactions WHERE ref = ?";
+        $q = "SELECT DISTINCT ref FROM transactions WHERE ref = ? AND store_id = ".$_SESSION['store_id'];
 
         $run_q = $this->db->query($q, [$ref]);
 
@@ -165,6 +167,7 @@ class Transaction extends CI_Model {
         $this->db->or_like('itemName', $value);
         $this->db->or_like('itemCode', $value);
         $this->db->group_by('ref');
+        $this->db->where('store_id =', $_SESSION['store_id']);
 
         $run_q = $this->db->get('transactions');
 
@@ -215,8 +218,8 @@ class Transaction extends CI_Model {
      * @return boolean
      */
     public function totalTransactions() {
-        $q = "SELECT count(DISTINCT REF) as 'totalTrans' FROM transactions";
-
+        $q = "SELECT count(DISTINCT REF) as 'totalTrans' FROM transactions where store_id = ".$_SESSION['store_id'];
+   
         $run_q = $this->db->query($q);
 
         if ($run_q->num_rows() > 0) {
@@ -242,7 +245,7 @@ class Transaction extends CI_Model {
      * @return boolean
      */
     public function totalEarnedToday() {
-        $q = "SELECT SUM(totalMoneySpent) as 'totalEarnedToday' FROM transactions WHERE DATE(transDate) = CURRENT_DATE";
+        $q = "SELECT SUM(totalMoneySpent) as 'totalEarnedToday' FROM transactions WHERE DATE(transDate) = CURRENT_DATE AND store_id =".$_SESSION['store_id'];
 
         $run_q = $this->db->query($q);
 
@@ -266,7 +269,7 @@ class Transaction extends CI_Model {
 
     //Not in use yet
     public function totalEarnedOnDay($date) {
-        $q = "SELECT SUM(totalPrice) as 'totalEarnedToday' FROM transactions WHERE DATE(transDate) = {$date}";
+        $q = "SELECT SUM(totalPrice) as 'totalEarnedToday' FROM transactions WHERE DATE(transDate) = {$date} AND store_id =".$_SESSION['store_id'];
 
         $run_q = $this->db->query($q);
 
@@ -316,7 +319,7 @@ class Transaction extends CI_Model {
 
             $this->db->where("DATE(transactions.transDate) >= ", $from_date);
             $this->db->where("DATE(transactions.transDate) <= ", $to_date);
-
+            $this->db->where("transactions.store_id =", $_SESSION['store_id']);
             $this->db->order_by('transactions.transId', 'DESC');
 
             $this->db->group_by('ref');

@@ -94,7 +94,12 @@ class Genmod extends CI_Model{
      * @return boolean
      */
     public function addevent($event, $eventRowIdOrRef, $eventDesc, $eventTable, $staffId){
-        $data = ['event'=>$event, 'eventRowIdOrRef'=>$eventRowIdOrRef, 'eventDesc'=>$eventDesc, 'eventTable'=>$eventTable, 'staffInCharge'=>$staffId];
+        $data = ['event'=>$event, 
+                'eventRowIdOrRef'=>$eventRowIdOrRef, 
+                'eventDesc'=>$eventDesc, 
+                'eventTable'=>$eventTable, 
+                'staffInCharge'=>$staffId,
+                'store_id' => $_SESSION['store_id']];
         
         $this->db->insert('eventlog', $data);
         
@@ -121,7 +126,7 @@ class Genmod extends CI_Model{
      * @return boolean
      */
     public function get_admin_name($admin_id){
-       $q = "SELECT CONCAT_WS(' ', first_name, last_name) as 'name' FROM admin WHERE id = ?";
+       $q = "SELECT CONCAT_WS(' ', first_name, last_name) as 'name' FROM admin WHERE id = ? AND store_id =".$_SESSION['store_id'];
        
        $run_q = $this->db->query($q, [$admin_id]);
        
@@ -196,7 +201,8 @@ class Genmod extends CI_Model{
 		
 		else{
 			$this->db->select('transDate, totalPrice');
-			$this->db->where(['YEAR(transDate)'=>$year_to_fetch]);
+            $this->db->where(['YEAR(transDate)'=>$year_to_fetch]);
+            $this->db->where('store_id =', $_SESSION['store_id']);
 			$run_q = $this->db->get('transactions');
 		}
         
@@ -226,7 +232,11 @@ class Genmod extends CI_Model{
      */
     public function getPaymentMethods($year){
 		if($this->db->platform() == "sqlite3"){
-			$q = "SELECT modeOfPayment FROM transactions WHERE strftime('%Y', transDate) GROUP BY ref";
+			$q = "SELECT modeOfPayment 
+                  FROM transactions 
+                  WHERE strftime('%Y', transDate)
+                  AND store_id = ".$_SESSION['store_id']."  
+                  GROUP BY ref";
 			
 			$run_q = $this->db->query($q);
 		}
